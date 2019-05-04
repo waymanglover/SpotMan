@@ -11,7 +11,7 @@ namespace SpotMan.Controllers
             {
                 StatusCode = (int)statusCode,
                 Content = $"Status Code: {(int)statusCode}; {statusCode}; {reason ?? string.Empty}",
-                ContentType = "text/plain",
+                ContentType = "text/plain"
             };
 
         public static ActionResult Result(HttpStatusCode statusCode, Exception e) =>
@@ -19,7 +19,7 @@ namespace SpotMan.Controllers
             {
                 StatusCode = (int)statusCode,
                 Content = $"Status Code: {(int)statusCode}; {statusCode}; {e}",
-                ContentType = "text/plain",
+                ContentType = "text/plain"
             };
 
         public static ActionResult Result(Exception e)
