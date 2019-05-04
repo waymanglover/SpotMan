@@ -340,4 +340,4 @@ ASALocalRun/
 healthchecksdb
 
 # Don't include app config to protect ClientId/ClientSecret for now
-appsettings.development.json
+appsettings.Development.json
