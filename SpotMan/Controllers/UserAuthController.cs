@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
@@ -82,9 +83,25 @@ namespace SpotMan.Controllers
                     RedirectUri = _configHelper.SelfUrl + Constants.LocalUrlAuthCallback,
                 };
                 var tokenResponse = await _httpClient.RequestAuthorizationCodeTokenAsync(tokenRequest);
-                //_configHelper.Token = tokenResponse.AccessToken;
 
-                return Result(HttpStatusCode.OK, tokenResponse.AccessToken);
+                if (tokenResponse.IsError)
+                {
+                    throw new ApplicationException("Failed to get token authorization code token."
+                                                   + Environment.NewLine
+                                                   + $"{tokenResponse.ErrorType} Error:"
+                                                   + $"{tokenResponse.Error} {tokenResponse.ErrorDescription}");
+                }
+                // ReSharper disable once InconsistentNaming
+                var Expiry = DateTime.UtcNow + TimeSpan.FromSeconds(tokenResponse.ExpiresIn);
+                var keysToStore = new Dictionary<string, string>()
+                {
+                    {nameof(tokenResponse.AccessToken), tokenResponse.AccessToken},
+                    {nameof(tokenResponse.RefreshToken), tokenResponse.RefreshToken},
+                    {nameof(Expiry), Expiry.ToString(CultureInfo.InvariantCulture)},
+                };
+                PersistenceHelper.StoreKeys(keysToStore);
+
+                return Result(HttpStatusCode.OK);
             }
             catch (Exception ex)
             {
