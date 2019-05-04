@@ -1,12 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
-using System.Linq;
 using System.Net;
+using System.Net.Http;
+using System.Threading.Tasks;
+using IdentityModel.Client;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using System.Web;
 using Microsoft.Extensions.Configuration;
+using SpotMan.Extensions;
 using SpotMan.Helpers;
 
 namespace SpotMan.Controllers
@@ -16,10 +17,16 @@ namespace SpotMan.Controllers
     public class UserAuthController : SpotManControllerBase
     {
         private readonly ConfigurationHelper _configHelper;
+        private readonly HttpClient _httpClient;
 
         public UserAuthController(IConfiguration configuration)
         {
             _configHelper = new ConfigurationHelper(configuration);
+            _httpClient = new HttpClient()
+            {
+                BaseAddress = new Uri(_configHelper.SelfUrl),
+                Timeout = TimeSpan.FromSeconds(_configHelper.TimeoutSeconds),
+            };
         }
 
         // GET api/values
@@ -32,16 +39,12 @@ namespace SpotMan.Controllers
                 {
                     {"client_id", _configHelper.ClientId},
                     {"response_type", "code"},
-                    {"redirect_uri", _configHelper.RedirectUri},
-                    {"scope" , string.Join(' ', _configHelper.Scopes)}
-                    // TODO: Add scope/state
+                    {"redirect_uri", _configHelper.SelfUrl + Constants.LocalUrlAuthCallback},
+                    {"scope", string.Join(' ', _configHelper.Scopes)}
+                    // TODO: Add state
                 };
-                var urlParamString = '?' +
-                                     string.Join('&',
-                                         urlParams.Select(p =>
-                                             HttpUtility.UrlEncode(p.Key) + '=' + HttpUtility.UrlEncode(p.Value)
-                                         ));
-                return Redirect(Constants.UrlSpotifyAccountAuthorize + urlParamString);
+
+                return Redirect(Constants.UrlSpotifyAuthorize + urlParams.ToUrlParamString());
             }
             catch (Exception ex)
             {
@@ -53,7 +56,7 @@ namespace SpotMan.Controllers
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status200OK)]
-        public ActionResult AuthorizeUserCallback(string code,
+        public async Task<ActionResult> AuthorizeUserCallback(string code,
             string error,
             string state)
         {
@@ -66,22 +69,27 @@ namespace SpotMan.Controllers
 
                 if (string.IsNullOrWhiteSpace(code))
                 {
-                    return Result(HttpStatusCode.BadRequest, $"Error: Empty or null code returned, " +
+                    return Result(HttpStatusCode.BadRequest, "Error: Empty or null code returned, " +
                                                              $"State: {state ?? "NULL"}");
                 }
 
-                return Result(HttpStatusCode.OK);
+                var tokenRequest = new AuthorizationCodeTokenRequest()
+                {
+                    ClientId = _configHelper.ClientId,
+                    ClientSecret = _configHelper.ClientSecret,
+                    Code = code,
+                    Address = Constants.UrlSpotifyToken,
+                    RedirectUri = _configHelper.SelfUrl + Constants.LocalUrlAuthCallback,
+                };
+                var tokenResponse = await _httpClient.RequestAuthorizationCodeTokenAsync(tokenRequest);
+                //_configHelper.Token = tokenResponse.AccessToken;
+
+                return Result(HttpStatusCode.OK, tokenResponse.AccessToken);
             }
             catch (Exception ex)
             {
                 return Result(ex);
             }
-        }
-
-        // PUT api/values/5
-        [HttpPut("{id}")]
-        public void Put(int id, [FromBody] string value)
-        {
         }
     }
 }
