@@ -33,7 +33,7 @@ namespace SpotMan.Controllers
                     {"client_id", _configHelper.ClientId},
                     {"response_type", "code"},
                     {"redirect_uri", _configHelper.RedirectUri},
-                    {"scope" }
+                    {"scope" , string.Join(' ', _configHelper.Scopes)}
                     // TODO: Add scope/state
                 };
                 var urlParamString = '?' +

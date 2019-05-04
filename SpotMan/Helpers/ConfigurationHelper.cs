@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Globalization;
+using System.Linq;
 using Microsoft.Extensions.Configuration;
 
 namespace SpotMan.Helpers
@@ -22,5 +24,10 @@ namespace SpotMan.Helpers
             get => DateTime.Parse(_configuration.GetSection("UserAuth")["TokenExpiry"], CultureInfo.InvariantCulture);
             set => _configuration.GetSection("UserAuth")["TokenExpiry"] = value.ToString(CultureInfo.InvariantCulture);
         }
+
+        public IEnumerable<string> Scopes => _configuration.GetSection("UserAuth")
+            .GetSection("Scopes")
+            .AsEnumerable()
+            .Select(kvp => kvp.Value);
     }
 }
