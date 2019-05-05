@@ -9,6 +9,12 @@ namespace SpotMan.Helpers
     public static class PersistenceHelper
     {
         private const string RegistryLocation = @"SOFTWARE\SpotMan";
+        public static string GetKey()
+        {
+            var subKey = Registry.CurrentUser.OpenSubKey(RegistryLocation);
+            if (subKey == null) return string.Empty;
+            return string.Empty;
+        }
         public static Dictionary<string, string> GetKeys()
         {
             // TODO: Azure key vault?

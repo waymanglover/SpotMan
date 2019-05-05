@@ -1,8 +1,11 @@
+using System;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Options;
+using SpotMan.OptionModels;
 
 //using Swashbuckle.AspNetCore.Swagger;
 
@@ -24,10 +27,22 @@ namespace SpotMan
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            services
-                //.AddSwaggerGen(c => { c.SwaggerDoc("v1", new Info { Title = "My API", Version = "v1" }); })
-                .AddControllers()
-                .AddNewtonsoftJson();
+            try
+            {
+                services
+                    .Configure<UserAuthOptions>(Configuration.GetSection("UserAuth"))
+                    .AddScoped(sp => sp.GetService<IOptionsSnapshot<UserAuthOptions>>().Value)
+                    .Configure<SpotifyOptions>(Configuration.GetSection("Spotify"))
+                    .AddScoped(sp => sp.GetService<IOptionsSnapshot<SpotifyOptions>>().Value)
+                    .AddMvc()
+                    //.AddSwaggerGen(c => { c.SwaggerDoc("v1", new Info { Title = "My API", Version = "v1" }); })
+                    .AddNewtonsoftJson();
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+                throw;
+            }
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

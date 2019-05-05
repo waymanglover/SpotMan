@@ -1,15 +1,14 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Globalization;
-using System.Net;
-using System.Net.Http;
-using System.Threading.Tasks;
-using IdentityModel.Client;
+﻿using IdentityModel.Client;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Configuration;
 using SpotMan.Extensions;
 using SpotMan.Helpers;
+using System;
+using System.Collections.Generic;
+using System.Globalization;
+using System.Net.Http;
+using System.Threading.Tasks;
+using SpotMan.OptionModels;
 
 namespace SpotMan.Controllers
 {
@@ -17,16 +16,16 @@ namespace SpotMan.Controllers
     [ApiController]
     public class UserAuthController : SpotManControllerBase
     {
-        private readonly ConfigurationHelper _configHelper;
-        private readonly HttpClient _httpClient;
+        private HttpClient HttpClient { get; }
+        private UserAuthOptions UserAuth { get;  }
 
-        public UserAuthController(IConfiguration configuration)
+        public UserAuthController(UserAuthOptions userAuth)
         {
-            _configHelper = new ConfigurationHelper(configuration);
-            _httpClient = new HttpClient()
+            UserAuth = userAuth;
+            HttpClient = new HttpClient()
             {
-                BaseAddress = new Uri(_configHelper.SelfUrl),
-                Timeout = TimeSpan.FromSeconds(_configHelper.TimeoutSeconds),
+                BaseAddress = new Uri(UserAuth.BaseUrl),
+                Timeout = TimeSpan.FromSeconds(UserAuth.TimeoutSeconds),
             };
         }
 
@@ -39,10 +38,10 @@ namespace SpotMan.Controllers
             {
                 var urlParams = new Dictionary<string, string>
                 {
-                    {"client_id", _configHelper.ClientId},
+                    {"client_id", UserAuth.ClientId},
                     {"response_type", "code"},
-                    {"redirect_uri", _configHelper.SelfUrl + Constants.LocalUrlAuthCallback},
-                    {"scope", string.Join(' ', _configHelper.Scopes)}
+                    {"redirect_uri", UserAuth.BaseUrl + Constants.LocalUrlAuthCallback},
+                    {"scope", string.Join(' ', UserAuth.Scopes)}
                     // TODO: Add state
                 };
 
@@ -67,24 +66,24 @@ namespace SpotMan.Controllers
             {
                 if (!string.IsNullOrEmpty(error))
                 {
-                    return Result(HttpStatusCode.Unauthorized, $"Error: {error}, State: {state ?? "NULL"}");
+                    return Result(StatusCodes.Status401Unauthorized, $"Error: {error}, State: {state ?? "NULL"}");
                 }
 
                 if (string.IsNullOrWhiteSpace(code))
                 {
-                    return Result(HttpStatusCode.BadRequest, "Error: Empty or null code returned, " +
+                    return Result(StatusCodes.Status400BadRequest, "Error: Empty or null code returned, " +
                                                              $"State: {state ?? "NULL"}");
                 }
 
                 var tokenRequest = new AuthorizationCodeTokenRequest()
                 {
-                    ClientId = _configHelper.ClientId,
-                    ClientSecret = _configHelper.ClientSecret,
+                    ClientId = UserAuth.ClientId,
+                    ClientSecret = UserAuth.ClientSecret,
                     Code = code,
                     Address = Constants.UrlSpotifyToken,
-                    RedirectUri = _configHelper.SelfUrl + Constants.LocalUrlAuthCallback,
+                    RedirectUri = UserAuth.BaseUrl + Constants.LocalUrlAuthCallback,
                 };
-                var tokenResponse = await _httpClient.RequestAuthorizationCodeTokenAsync(tokenRequest);
+                var tokenResponse = await HttpClient.RequestAuthorizationCodeTokenAsync(tokenRequest);
 
                 if (tokenResponse.IsError)
                 {
@@ -103,7 +102,7 @@ namespace SpotMan.Controllers
                 };
                 PersistenceHelper.StoreKeys(keysToStore);
 
-                return Result(HttpStatusCode.OK);
+                return Success();
             }
             catch (Exception ex)
             {
