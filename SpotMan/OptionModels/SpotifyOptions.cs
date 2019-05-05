@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-
-namespace SpotMan.OptionModels
+﻿namespace SpotMan.OptionModels
 {
     public class SpotifyOptions
     {

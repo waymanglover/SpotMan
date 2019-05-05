@@ -1,13 +1,13 @@
-﻿using IdentityModel.Client;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
-using SpotMan.Extensions;
-using SpotMan.Helpers;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Net.Http;
 using System.Threading.Tasks;
+using IdentityModel.Client;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
+using SpotMan.Extensions;
+using SpotMan.Helpers;
 using SpotMan.OptionModels;
 
 namespace SpotMan.Controllers
@@ -16,18 +16,18 @@ namespace SpotMan.Controllers
     [ApiController]
     public class UserAuthController : SpotManControllerBase
     {
-        private HttpClient HttpClient { get; }
-        private UserAuthOptions UserAuth { get;  }
-
         public UserAuthController(UserAuthOptions userAuth)
         {
             UserAuth = userAuth;
-            HttpClient = new HttpClient()
+            HttpClient = new HttpClient
             {
                 BaseAddress = new Uri(UserAuth.BaseUrl),
-                Timeout = TimeSpan.FromSeconds(UserAuth.TimeoutSeconds),
+                Timeout = TimeSpan.FromSeconds(UserAuth.TimeoutSeconds)
             };
         }
+
+        private HttpClient HttpClient { get; }
+        private UserAuthOptions UserAuth { get; }
 
         [HttpGet]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
@@ -65,40 +65,34 @@ namespace SpotMan.Controllers
             try
             {
                 if (!string.IsNullOrEmpty(error))
-                {
                     return Result(StatusCodes.Status401Unauthorized, $"Error: {error}, State: {state ?? "NULL"}");
-                }
 
                 if (string.IsNullOrWhiteSpace(code))
-                {
                     return Result(StatusCodes.Status400BadRequest, "Error: Empty or null code returned, " +
-                                                             $"State: {state ?? "NULL"}");
-                }
+                                                                   $"State: {state ?? "NULL"}");
 
-                var tokenRequest = new AuthorizationCodeTokenRequest()
+                var tokenRequest = new AuthorizationCodeTokenRequest
                 {
                     ClientId = UserAuth.ClientId,
                     ClientSecret = UserAuth.ClientSecret,
                     Code = code,
                     Address = Constants.UrlSpotifyToken,
-                    RedirectUri = UserAuth.BaseUrl + Constants.LocalUrlAuthCallback,
+                    RedirectUri = UserAuth.BaseUrl + Constants.LocalUrlAuthCallback
                 };
                 var tokenResponse = await HttpClient.RequestAuthorizationCodeTokenAsync(tokenRequest);
 
                 if (tokenResponse.IsError)
-                {
                     throw new ApplicationException("Failed to get token authorization code token."
                                                    + Environment.NewLine
                                                    + $"{tokenResponse.ErrorType} Error:"
                                                    + $"{tokenResponse.Error} {tokenResponse.ErrorDescription}");
-                }
                 // ReSharper disable once InconsistentNaming
                 var Expiry = DateTime.UtcNow + TimeSpan.FromSeconds(tokenResponse.ExpiresIn);
-                var keysToStore = new Dictionary<string, string>()
+                var keysToStore = new Dictionary<string, string>
                 {
                     {nameof(tokenResponse.AccessToken), tokenResponse.AccessToken},
                     {nameof(tokenResponse.RefreshToken), tokenResponse.RefreshToken},
-                    {nameof(Expiry), Expiry.ToString(CultureInfo.InvariantCulture)},
+                    {nameof(Expiry), Expiry.ToString(CultureInfo.InvariantCulture)}
                 };
                 PersistenceHelper.StoreKeys(keysToStore);
 

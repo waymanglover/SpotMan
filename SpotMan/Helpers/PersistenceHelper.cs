@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using Microsoft.Win32;
@@ -9,12 +10,14 @@ namespace SpotMan.Helpers
     public static class PersistenceHelper
     {
         private const string RegistryLocation = @"SOFTWARE\SpotMan";
+
         public static string GetKey()
         {
             var subKey = Registry.CurrentUser.OpenSubKey(RegistryLocation);
             if (subKey == null) return string.Empty;
             return string.Empty;
         }
+
         public static Dictionary<string, string> GetKeys()
         {
             // TODO: Azure key vault?
@@ -23,7 +26,7 @@ namespace SpotMan.Helpers
 
         private static Dictionary<string, string> GetKeysJson()
         {
-            throw new System.NotImplementedException();
+            throw new NotImplementedException();
         }
 
         private static Dictionary<string, string> GetKeysWindows()
@@ -33,10 +36,7 @@ namespace SpotMan.Helpers
             if (subKey == null) return output;
 
             var names = subKey.GetValueNames();
-            foreach (var name in names)
-            {
-                output.Add(name, subKey.GetValue(name).ToString());
-            }
+            foreach (var name in names) output.Add(name, subKey.GetValue(name).ToString());
             return output;
         }
 
@@ -44,19 +44,15 @@ namespace SpotMan.Helpers
         {
             // TODO: Azure key vault?
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-            {
                 StoreKeysWindows(keys);
-            }
             else
-            {
                 StoreKeysJson(keys);
-            }
         }
 
         private static void StoreKeysJson(Dictionary<string, string> keys)
         {
             // TODO: JSON -> File for cross platform?
-            throw new System.NotImplementedException();
+            throw new NotImplementedException();
         }
 
         private static void StoreKeysWindows(Dictionary<string, string> keys)

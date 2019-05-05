@@ -12,7 +12,7 @@ using SpotMan.OptionModels;
 namespace SpotMan
 {
     /// <summary>
-    /// Main entry point for Spotify Manager.
+    ///     Main entry point for Spotify Manager.
     /// </summary>
     /// <remarks>Swashbuckle hasn't been updated to support .NET Core 3.0 preview.</remarks>
     public class Startup
