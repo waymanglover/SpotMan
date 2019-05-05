@@ -3,7 +3,14 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.28803.202
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SpotMan", "SpotMan\SpotMan.csproj", "{FE67F867-A5B1-41DC-A6A8-1EFCF3FB83EA}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SpotMan", "SpotMan\SpotMan.csproj", "{FE67F867-A5B1-41DC-A6A8-1EFCF3FB83EA}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{6579CD91-0F09-4288-A4C8-5DBCCC03BA47}"
+	ProjectSection(SolutionItems) = preProject
+		.gitattributes = .gitattributes
+		.gitignore = .gitignore
+		global.json = global.json
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
