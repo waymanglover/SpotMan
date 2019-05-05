@@ -79,6 +79,7 @@ namespace SpotMan.Controllers
                     Address = Constants.UrlSpotifyToken,
                     RedirectUri = UserAuth.BaseUrl + Constants.LocalUrlAuthCallback
                 };
+                var tokenRequestTime = DateTimeOffset.UtcNow;
                 var tokenResponse = await HttpClient.RequestAuthorizationCodeTokenAsync(tokenRequest);
 
                 if (tokenResponse.IsError)
@@ -87,7 +88,7 @@ namespace SpotMan.Controllers
                                                    + $"{tokenResponse.ErrorType} Error:"
                                                    + $"{tokenResponse.Error} {tokenResponse.ErrorDescription}");
                 // ReSharper disable once InconsistentNaming
-                var Expiry = DateTime.UtcNow + TimeSpan.FromSeconds(tokenResponse.ExpiresIn);
+                var Expiry = tokenRequestTime + TimeSpan.FromSeconds(tokenResponse.ExpiresIn);
                 var keysToStore = new Dictionary<string, string>
                 {
                     {nameof(tokenResponse.AccessToken), tokenResponse.AccessToken},
