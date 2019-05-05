@@ -30,8 +30,9 @@ namespace SpotMan.Controllers
             };
         }
 
-        // GET api/values
         [HttpGet]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        [ProducesResponseType(StatusCodes.Status302Found)]
         public ActionResult AuthorizeUser()
         {
             try
@@ -54,6 +55,7 @@ namespace SpotMan.Controllers
         }
 
         [HttpGet("callback")]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status200OK)]
