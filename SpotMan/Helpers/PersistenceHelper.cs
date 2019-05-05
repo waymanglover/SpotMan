@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
+using System.Linq;
 using System.Runtime.InteropServices;
 using Microsoft.Win32;
 
@@ -11,33 +11,47 @@ namespace SpotMan.Helpers
     {
         private const string RegistryLocation = @"SOFTWARE\SpotMan";
 
-        public static string GetKey()
+        public static string GetKey(string name)
         {
-            var subKey = Registry.CurrentUser.OpenSubKey(RegistryLocation);
-            if (subKey == null) return string.Empty;
-            return string.Empty;
+            return RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? GetKeyWindows(name) : GetKeyCrossPlatform(name);
+        }
+
+        private static string GetKeyWindows(string name)
+        {
+            return SpotManRegistryKey() == null ? string.Empty : SpotManRegistryKey().GetValue(name).ToString();
+        }
+
+        // ReSharper disable once UnusedParameter.Local
+        private static string GetKeyCrossPlatform(string name)
+        {
+            throw new NotImplementedException();
         }
 
         public static Dictionary<string, string> GetKeys()
         {
             // TODO: Azure key vault?
-            return RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? GetKeysWindows() : GetKeysJson();
-        }
-
-        private static Dictionary<string, string> GetKeysJson()
-        {
-            throw new NotImplementedException();
+            return RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? GetKeysWindows() : GetKeysCrossPlatform();
         }
 
         private static Dictionary<string, string> GetKeysWindows()
         {
-            var subKey = Registry.CurrentUser.OpenSubKey(RegistryLocation);
-            var output = new Dictionary<string, string>();
-            if (subKey == null) return output;
+            var names = SpotManRegistryKey().GetValueNames();
+            return names.ToDictionary(name => name, name => SpotManRegistryKey().GetValue(name).ToString());
+        }
 
-            var names = subKey.GetValueNames();
-            foreach (var name in names) output.Add(name, subKey.GetValue(name).ToString());
-            return output;
+        private static RegistryKey SpotManRegistryKey()
+        {
+            return Registry.CurrentUser.OpenSubKey(RegistryLocation);
+        }
+
+        private static Dictionary<string, string> GetKeysCrossPlatform()
+        {
+            throw new NotImplementedException();
+        }
+
+        public static void StoreKey(string name, string value)
+        {
+            SpotManRegistryKey().SetValue(name, value);
         }
 
         public static void StoreKeys(Dictionary<string, string> keys)
@@ -46,23 +60,22 @@ namespace SpotMan.Helpers
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
                 StoreKeysWindows(keys);
             else
-                StoreKeysJson(keys);
-        }
-
-        private static void StoreKeysJson(Dictionary<string, string> keys)
-        {
-            // TODO: JSON -> File for cross platform?
-            throw new NotImplementedException();
+                StoreKeysCrossPlatform(keys);
         }
 
         private static void StoreKeysWindows(Dictionary<string, string> keys)
         {
-            using var registryKey = Registry.CurrentUser.CreateSubKey(RegistryLocation);
             foreach (var (name, value) in keys)
             {
-                Debug.Assert(registryKey != null, nameof(registryKey) + " != null");
-                registryKey.SetValue(name, value);
+                StoreKey(name, value);
             }
+        }
+
+        // ReSharper disable once UnusedParameter.Local
+        private static void StoreKeysCrossPlatform(Dictionary<string, string> keys)
+        {
+            // TODO: JSON -> File for cross platform?
+            throw new NotImplementedException();
         }
     }
 }
