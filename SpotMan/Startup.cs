@@ -6,7 +6,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
 using SpotMan.OptionModels;
-
 //using Swashbuckle.AspNetCore.Swagger;
 
 namespace SpotMan
@@ -35,7 +34,7 @@ namespace SpotMan
                     .Configure<SpotifyOptions>(Configuration.GetSection("Spotify"))
                     .AddScoped(sp => sp.GetService<IOptionsSnapshot<SpotifyOptions>>().Value)
                     .AddMvc()
-                    //.AddSwaggerGen(c => { c.SwaggerDoc("v1", new Info { Title = "My API", Version = "v1" }); })
+                    //.AddSwaggerGen(c => { c.SwaggerDoc("v1", new Info { Title = "SpotMan API", Version = "v1" }); })
                     .AddNewtonsoftJson();
             }
             catch (Exception e)
@@ -66,7 +65,7 @@ namespace SpotMan
                 // specifying the Swagger JSON endpoint.
                 /*.UseSwaggerUI(c =>
                 {
-                    c.SwaggerEndpoint("/swagger/v1/swagger.json", "My API V1");
+                    c.SwaggerEndpoint("/swagger/v1/swagger.json", "SpotMan API");
                     c.RoutePrefix = string.Empty;
                 })
                 */
